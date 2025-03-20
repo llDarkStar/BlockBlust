@@ -1,0 +1,28 @@
+body {
+    background-color: rgb(24, 77, 151);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Helvetica Neue", Arial, sans-serif;
+    overflow: hidden;
+}
+
+h1 {
+    position: absolute;
+    left: 50;
+    top: 50;
+    color: white
+}
+
+canvas {
+    border: 15px solid #042a5e;
+    border-radius: 8px;
+}
+
+.shape-cont {
+    display: flex;
+}
