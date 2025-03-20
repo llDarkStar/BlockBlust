@@ -67,32 +67,25 @@ window.addEventListener("DOMContentLoaded", () => {
             const x = col * cellSize;
             const y = row * cellSize;
       
-            // Создаём линейный градиент сверху вниз
             const gradient = ctx.createLinearGradient(x, y, x, y + cellSize);
             gradient.addColorStop(0, '#3090ff');
             gradient.addColorStop(0.5, '#62b0ff');
             gradient.addColorStop(1, '#1f73cc');
       
-            // Настраиваем тень (в Canvas нельзя сделать inset напрямую)
             ctx.shadowColor = 'rgba(0,0,0,0.3)';
             ctx.shadowBlur = 4;
             ctx.shadowOffsetX = 0;
             ctx.shadowOffsetY = 2;
       
-            // Рисуем скруглённый прямоугольник
             drawRoundedRect(ctx, x, y, cellSize, cellSize, 4);
       
-            // Заливаем градиентом
             ctx.fillStyle = gradient;
             ctx.fill();
       
-            // Обводка
             ctx.lineWidth = 3;
-            ctx.strokeStyle = 'rgba(255,255,255,0.5)'; // условный "ridge"
+            ctx.strokeStyle = 'rgba(255,255,255,0.5)';
             ctx.stroke();
       
-            // Отключаем тень, если хотим, чтобы тень не повлияла
-            // на последующие элементы
             ctx.shadowColor = 'transparent';
           }
         }
@@ -203,8 +196,6 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     function drawShapeShadow(shapeMatrix, gridX, gridY, fillColor = '#ff4c4c') {
-        // gridX, gridY — координаты «ячейки» на сетке
-        // Примерно: ctx.fillRect( (gridX+col)*cellSize, (gridY+row)*cellSize, cellSize, cellSize )
         ctx.save();
         ctx.globalAlpha = 0.5;
         ctx.fillStyle = fillColor;
@@ -223,8 +214,6 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
     function getGridCoordsFromMouse(mouseX, mouseY) {
-        // mouseX, mouseY — координаты мыши в пикселях canvas
-        // переводим в индекс ячейки
         const gx = Math.floor(mouseX / cellSize);
         const gy = Math.floor(mouseY / cellSize);
         return { gx, gy };
@@ -252,9 +241,7 @@ window.addEventListener("DOMContentLoaded", () => {
             return rotated;
           }
         
-          // Отражение по горизонтали (зеркало слева-направо)
           function flipMatrixH(matrix) {
-            // Для каждой строки делаем reverse()
             return matrix.map(row => row.slice().reverse());
           }
 
@@ -268,7 +255,6 @@ window.addEventListener("DOMContentLoaded", () => {
             shapeMatrix = rotateMatrixCW(shapeMatrix);
           }
 
-            // 3) 50% шанс отразить фигуру по горизонтали
           if (Math.random() < 0.5) {
             shapeMatrix = flipMatrixH(shapeMatrix);
           }
@@ -289,7 +275,6 @@ window.addEventListener("DOMContentLoaded", () => {
             isDragging: false,
             offsetX: 0,
             offsetY: 0,
-            // Начальные координаты
             initialLeft: startLeft,
             initialTop:  startTop,
           });
@@ -297,7 +282,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
         checkIfGameOver();
 
-        // Подключаем им drag'n'drop
         newShapes.forEach(s => makeDraggable(s));
         shapeDataArray.push(...newShapes);
     }
@@ -305,18 +289,11 @@ window.addEventListener("DOMContentLoaded", () => {
     generateThreeShapes();
 
     //Drag and drop
-
 function makeDraggable(shapeData) {
   const element = shapeData.domEl;
 
-  // Поддержка Pointer Events:
-  // - pointerdown (аналог mousedown / touchstart)
-  // - pointermove (аналог mousemove / touchmove)
-  // - pointerup   (аналог mouseup   / touchend)
-
   function onPointerDown(e) {
     if (gameOver) return;
-    // e.preventDefault(); // если нужно предотвращать контекст-меню или скролл
 
     shapeData.isDragging = true;
     shapeData.offsetX = e.clientX - element.offsetLeft;
@@ -328,13 +305,11 @@ function makeDraggable(shapeData) {
     if (gameOver) return;
     if (!shapeData.isDragging) return;
 
-    // e.preventDefault(); // при необходимости
     const newX = e.clientX - shapeData.offsetX;
     const newY = e.clientY - shapeData.offsetY;
     element.style.left = newX + 'px';
     element.style.top  = newY + 'px';
 
-    // Рисуем тень
     renderEmptyBoard();
     const mouseCanvasX = e.clientX - canvasRect.left - shapeData.offsetX;
     const mouseCanvasY = e.clientY - canvasRect.top  - shapeData.offsetY;
@@ -362,7 +337,6 @@ function makeDraggable(shapeData) {
       return;
     }
 
-    // Устанавливаем фигуру
     for (let row = 0; row < shapeData.shapeMatrix.length; row++) {
       for (let col = 0; col < shapeData.shapeMatrix[row].length; col++) {
         if (shapeData.shapeMatrix[row][col] === 1) {
@@ -384,7 +358,6 @@ function makeDraggable(shapeData) {
         }
     }
 
-    // Подключаем Pointer Events
     element.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
@@ -396,12 +369,10 @@ function makeDraggable(shapeData) {
             if (shapeMatrix[row][col] === 1) {
               const boardRow = gy + row;
               const boardCol = gx + col;
-              // Выходим ли за границы?
               if (boardRow < 0 || boardRow >= gridCount ||
                   boardCol < 0 || boardCol >= gridCount) {
                 return false;
               }
-              // Или там уже занято?
               if (board[boardRow][boardCol] === 1) {
                 return false;
               }
@@ -411,9 +382,7 @@ function makeDraggable(shapeData) {
         return true;
       }
     
-      // === 9) clearLines() — убираем заполненные ряды/колонки
       function clearLines() {
-        // 1) Удаляем заполненные строки (без анимации)
         for (let row = 0; row < gridCount; row++) {
           const isFullRow = board[row].every(cell => cell === 1);
           if (isFullRow) {
@@ -423,7 +392,6 @@ function makeDraggable(shapeData) {
           }
         }
       
-        // 2) Ищем заполненные столбцы
         for (let col = 0; col < gridCount; col++) {
           let isFullCol = true;
           for (let row = 0; row < gridCount; row++) {
@@ -433,19 +401,15 @@ function makeDraggable(shapeData) {
             }
           }
           if (isFullCol) {
-            // (a) Сразу обнулим этот столбец в board, 
-            //     чтобы он не рисовался при обычной перерисовке.
             for (let row = 0; row < gridCount; row++) {
               board[row][col] = 0;
             }
             console.log(`Column ${col} cleared!`);
             score.textContent = Number(score.textContent) + 5;
       
-            // (b) Запускаем «анимацию рассыпания»
             explodeColumn(col);
           }
         }
-        // После мы просто перерисовываем
         renderEmptyBoard();
       }
 
@@ -461,19 +425,13 @@ function makeDraggable(shapeData) {
       }
 
       function checkIfGameOver() {
-        // Если shapeDataArray пустой — возможно, наоборот, вы хотите сгенерировать новые 
-        // фигуры (как у вас уже сделано). Или пропустить
         if (shapeDataArray.length === 0) {
-          // нет фигур для проверки – значит, пока не «Game Over».
-          // (Или наоборот, вы хотите сразу выдать "All placed, next wave"?)
           return;
         }
       
-        // Проверяем, может ли хоть одна фигура поместиться
         let canAnyShapeBePlaced = false;
         for (const shapeData of shapeDataArray) {
           if (canPlaceAnywhere(shapeData.shapeMatrix)) {
-            // Нашли фигуру, которую можно поставить
             canAnyShapeBePlaced = true;
             break;
           }
@@ -497,44 +455,26 @@ function makeDraggable(shapeData) {
       }
 
       function explodeColumn(colIndex) {
-        // 1) Соберём массив «частиц»
         const particles = [];
       
-        // Пройдём по строкам
         for (let row = 0; row < gridCount; row++) {
-          // Если раньше клетка была `1` (то есть заполнена), 
-          // мы её «разобьём» на несколько мелких квадратиков.
-          // Но мы уже обнулили board[row][colIndex], поэтому 
-          // здесь можно просто генерировать частицы для каждой клетки столбца.
-          // (Если хотите проверять, что действительно была 1, 
-          //  тогда перед обнулением сохраните эти ячейки.)
-          
-          // Координаты верхнего левого угла клетки
+       
           const cellX = colIndex * cellSize;
           const cellY = row * cellSize;
       
-          // Количество маленьких квадратиков на одну клетку
           const numFragments = 4; 
-          // Сколько по горизонтали/вертикали (примерно sqrt(numFragments)) 
-          // — упрощенно сделаем просто цикл
       
           for (let i = 0; i < numFragments; i++) {
-            // Ширина/высота каждого квадратика
             const fragSize = cellSize / 2; 
-            // Начальные координаты (дробим клетку на 4 части 2x2)
             const offsetX = (i % 2) * fragSize;
             const offsetY = (Math.floor(i / 2)) * fragSize;
       
             const px = cellX + offsetX;
             const py = cellY + offsetY;
       
-            // Случайная скорость
-            // пусть разлетаются в стороны, 
-            // с небольшим разбросом по вертикали
             const vx = (Math.random() - 0.5) * 5; 
-            const vy = - (Math.random() * 5 + 2);  // пусть летят немного вверх
+            const vy = - (Math.random() * 5 + 2); 
       
-            // Записываем в массив
             particles.push({
               x: px,
               y: py,
@@ -542,13 +482,12 @@ function makeDraggable(shapeData) {
               h: fragSize,
               vx,
               vy,
-              alpha: 1.0,           // начальная непрозрачность
-              alphaDecay: 0.02,     // как быстро «тает» прозрачность
+              alpha: 1.0,
+              alphaDecay: 0.02,
             });
           }
         }
       
-        // 2) Запускаем анимационный цикл
         const pulses = [];
 
         function createMultiplePulses(x, width, count = 3) {
@@ -559,19 +498,16 @@ function makeDraggable(shapeData) {
                 width: width,
                 height: canvas.height,
                 alpha: 1,
-                // например, у каждого волны своя скорость затухания
                 alphaDecay: 0.02 + i * 0.01,  
               });
             }
           }
-        const gravity = 0.2; // гравитация, пусть тянет вниз
+        const gravity = 0.2;
         //createMultiplePulses(colIndex * cellSize, cellSize);
         function animateParticles() {
-          // Очищаем канвас и рисуем сетку + остальное
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           drawGrid();
       
-          // Рисуем оставшиеся клетки board (столбец уже обнулён)
           for (let r = 0; r < gridCount; r++) {
             for (let c = 0; c < gridCount; c++) {
               if (board[r][c] === 1) {
@@ -580,20 +516,15 @@ function makeDraggable(shapeData) {
             }
           }
       
-          // Обновляем и рисуем частицы
           let aliveCount = 0;
           particles.forEach(p => {
-            // Сдвиг с учётом скорости
             p.x += p.vx;
             p.y += p.vy;
-            // Применяем гравитацию
             p.vy += gravity;
       
-            // Уменьшаем прозрачность
             p.alpha -= p.alphaDecay;
             if (p.alpha < 0) p.alpha = 0;
       
-            // Рисуем, если alpha > 0
             if (p.alpha > 0) {
               aliveCount++;
               ctx.save();
@@ -601,7 +532,6 @@ function makeDraggable(shapeData) {
               ctx.fillStyle = "#ff4c4c";
               ctx.fillRect(p.x, p.y, p.w, p.h);
       
-              // обводка, если хотите
               ctx.strokeStyle = "rgba(255,255,255,0.5)";
               ctx.lineWidth = 1;
               ctx.strokeRect(p.x, p.y, p.w, p.h);
@@ -616,7 +546,6 @@ function makeDraggable(shapeData) {
             if (pulse.alpha > 0) {
               ctx.save();
               ctx.globalAlpha = pulse.alpha;
-              // Можем добавить градиент:
               const gradient = ctx.createLinearGradient(pulse.x, 0, pulse.x + pulse.width, 0);
               gradient.addColorStop(0, '#62b0ff');
               gradient.addColorStop(0.5, '#3090ff');
